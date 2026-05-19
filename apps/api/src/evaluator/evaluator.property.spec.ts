@@ -21,7 +21,7 @@ const comorbidOptionsArb = fc.subarray([
 ], { minLength: 0, maxLength: 5 });
 
 const bpOptionsArb = fc.subarray([
-  "Normal (< 120/80)",
+  "Normal ( < 120/80)",
   "Elevated (120–129 / <80)",
   "Stage 1 Hypertension (130–139 / 80–89)",
   "Stage 2 Hypertension (≥140 / ≥90)",
@@ -192,7 +192,7 @@ describe("Feature: glp1-eligibility-form, Property 5: Eligible is the default wh
           hasDiabetes: "No",
           medications: [],
           comorbidConditions: [],
-          bloodPressure: ["Normal (< 120/80)"],
+          bloodPressure: ["Normal ( < 120/80)"],
           smokingStatus: "No",
           alcoholFrequency: "Never",
           activityLevel: "Moderate (3–4x/week)",

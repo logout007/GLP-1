@@ -204,7 +204,7 @@ exports[`Form Schema Structure > snapshot of schema shape 1`] = `
       "inputType": "checkbox",
       "minSelect": 1,
       "options": [
-        "Normal (< 120/80)",
+        "Normal ( < 120/80)",
         "Elevated (120–129 / <80)",
         "Stage 1 Hypertension (130–139 / 80–89)",
         "Stage 2 Hypertension (≥140 / ≥90)",

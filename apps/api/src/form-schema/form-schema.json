@@ -104,7 +104,7 @@
       "prompt": "Check all that apply based on your most recent blood pressure reading.",
       "inputType": "checkbox",
       "options": [
-        "Normal (< 120/80)",
+        "Normal ( < 120/80)",
         "Elevated (120–129 / <80)",
         "Stage 1 Hypertension (130–139 / 80–89)",
         "Stage 2 Hypertension (≥140 / ≥90)",

@@ -18,8 +18,23 @@ export default function FormPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigatingRef = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Wait for Zustand persist rehydration before running init logic
+  useEffect(() => {
+    const unsub = useSessionStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
+    // If already hydrated (e.g., SSR or fast rehydration)
+    if (useSessionStore.persist.hasHydrated()) {
+      setHydrated(true);
+    }
+    return () => { unsub(); };
+  }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
+
     // If the session is already complete, redirect immediately
     if (store.isComplete) {
       router.replace("/form/result");
@@ -51,7 +66,7 @@ export default function FormPage() {
       }
     }
     init();
-  }, []);
+  }, [hydrated]);
 
   async function handleNext(value: unknown) {
     if (!store.sessionId || navigatingRef.current) return;
