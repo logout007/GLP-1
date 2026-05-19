@@ -1,0 +1,10 @@
+{
+  "name": "phoenixlabs-glp1",
+  "private": true,
+  "workspaces": ["apps/web", "apps/api"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=apps/web\" \"npm run dev --workspace=apps/api\"",
+    "test": "npm run test --workspace=apps/api && npm run test --workspace=apps/web",
+    "test:e2e": "npm run test:e2e --workspace=apps/web"
+  }
+}

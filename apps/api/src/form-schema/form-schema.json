@@ -1,0 +1,197 @@
+{
+  "version": "1.0.0",
+  "screens": [
+    {
+      "id": 1,
+      "title": "Age",
+      "prompt": "What is your age?",
+      "inputType": "number",
+      "validation": { "min": 1, "max": 120, "required": true },
+      "branch": [
+        { "condition": "value < 18", "action": "end", "result": "Ineligible", "reason": "Underage" },
+        { "condition": "value > 75", "action": "end", "result": "Requires Clinical Review", "reason": "Age Over 75" },
+        { "condition": "default", "action": "next", "screen": 2 }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Weight",
+      "prompt": "Enter your weight in kilograms.",
+      "inputType": "number",
+      "validation": { "min": 20, "max": 300, "required": true },
+      "branch": [
+        { "condition": "default", "action": "next", "screen": 3 }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Height",
+      "prompt": "Enter your height in centimeters.",
+      "inputType": "number",
+      "validation": { "min": 100, "max": 250, "required": true },
+      "branch": [
+        { "condition": "default", "action": "next", "screen": 4 }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "BMI Evaluation",
+      "prompt": "Calculating your Body Mass Index (BMI)...",
+      "inputType": "computed",
+      "computation": {
+        "formula": "weight / ((height / 100) ** 2)",
+        "dependsOn": { "weight": 2, "height": 3 }
+      },
+      "branch": [
+        { "condition": "bmi < 25", "action": "end", "result": "Ineligible", "reason": "BMI Too Low" },
+        { "condition": "bmi >= 40", "action": "end", "result": "Requires Clinical Review", "reason": "High BMI" },
+        { "condition": "default", "action": "next", "screen": 5 }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Pregnancy Status",
+      "prompt": "Are you currently pregnant?",
+      "inputType": "radio",
+      "options": ["Yes", "No"],
+      "branch": [
+        { "condition": "value === 'Yes'", "action": "end", "result": "Ineligible", "reason": "Pregnancy Contraindication" },
+        { "condition": "default", "action": "next", "screen": 6 }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Comorbid Conditions",
+      "prompt": "Which chronic conditions have you been diagnosed with? (Select all that apply)",
+      "inputType": "checkbox",
+      "options": [
+        "Hypertension",
+        "Dyslipidemia",
+        "Sleep Apnea",
+        "GERD",
+        "Thyroid Disorder"
+      ],
+      "allowEmpty": true,
+      "branch": [
+        { "condition": "default", "action": "next", "screen": 7 }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Diabetes History",
+      "prompt": "Have you ever been diagnosed with diabetes?",
+      "inputType": "radio",
+      "options": ["Yes", "No"],
+      "branch": [
+        { "condition": "value === 'Yes'", "action": "next", "screen": 8 },
+        { "condition": "default", "action": "next", "screen": 9 }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "HbA1c",
+      "prompt": "Enter your latest HbA1c (%) result.",
+      "inputType": "number",
+      "validation": { "min": 3.0, "max": 20.0, "required": true },
+      "branch": [
+        { "condition": "value > 9.0", "action": "end", "result": "Ineligible", "reason": "Uncontrolled Diabetes" },
+        { "condition": "default", "action": "next", "screen": 9 }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Blood Pressure",
+      "prompt": "Check all that apply based on your most recent blood pressure reading.",
+      "inputType": "checkbox",
+      "options": [
+        "Normal (< 120/80)",
+        "Elevated (120–129 / <80)",
+        "Stage 1 Hypertension (130–139 / 80–89)",
+        "Stage 2 Hypertension (≥140 / ≥90)",
+        "Hypertensive Crisis (>180 / >120)"
+      ],
+      "allowEmpty": false,
+      "minSelect": 1,
+      "branch": [
+        { "condition": "default", "action": "next", "screen": 10 }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Current Medications",
+      "prompt": "Which medications are you currently prescribed?",
+      "inputType": "checkbox",
+      "options": [
+        "ACE inhibitors",
+        "Beta blockers",
+        "Statins",
+        "Thyroid medication",
+        "GLP-1 receptor agonist"
+      ],
+      "allowEmpty": true,
+      "branch": [
+        { "condition": "value.includes('GLP-1 receptor agonist')", "action": "end", "result": "Requires Clinical Review", "reason": "Already On GLP-1 Therapy" },
+        { "condition": "default", "action": "next", "screen": 11 }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Smoking Status",
+      "prompt": "Do you currently smoke tobacco?",
+      "inputType": "radio",
+      "options": ["Yes", "No"],
+      "branch": [
+        { "condition": "default", "action": "next", "screen": 12 }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Alcohol Use Frequency",
+      "prompt": "How often do you consume alcohol?",
+      "inputType": "radio",
+      "options": ["Never", "Monthly", "Weekly", "Daily"],
+      "branch": [
+        { "condition": "default", "action": "next", "screen": 13 }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Physical Activity Level",
+      "prompt": "How would you describe your typical activity level?",
+      "inputType": "radio",
+      "options": [
+        "Sedentary",
+        "Light (1–2x/week)",
+        "Moderate (3–4x/week)",
+        "Vigorous (5+x/week)"
+      ],
+      "branch": [
+        { "condition": "default", "action": "next", "screen": 14 }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Dietary Habits",
+      "prompt": "Which best describes your diet? (Select all that apply)",
+      "inputType": "checkbox",
+      "options": [
+        "High sugar intake",
+        "High processed foods",
+        "Frequent sugary beverages",
+        "High fiber diet",
+        "Balanced diet"
+      ],
+      "allowEmpty": true,
+      "branch": [
+        { "condition": "default", "action": "next", "screen": 15 }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Final Evaluation",
+      "prompt": null,
+      "inputType": "evaluation",
+      "branch": []
+    }
+  ]
+}

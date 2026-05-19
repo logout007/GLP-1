@@ -1,0 +1,329 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Form Schema Structure > snapshot of schema shape 1`] = `
+{
+  "screens": [
+    {
+      "branch": [
+        {
+          "action": "end",
+          "condition": "value < 18",
+          "reason": "Underage",
+          "result": "Ineligible",
+        },
+        {
+          "action": "end",
+          "condition": "value > 75",
+          "reason": "Age Over 75",
+          "result": "Requires Clinical Review",
+        },
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 2,
+        },
+      ],
+      "id": 1,
+      "inputType": "number",
+      "prompt": "What is your age?",
+      "title": "Age",
+      "validation": {
+        "max": 120,
+        "min": 1,
+        "required": true,
+      },
+    },
+    {
+      "branch": [
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 3,
+        },
+      ],
+      "id": 2,
+      "inputType": "number",
+      "prompt": "Enter your weight in kilograms.",
+      "title": "Weight",
+      "validation": {
+        "max": 300,
+        "min": 20,
+        "required": true,
+      },
+    },
+    {
+      "branch": [
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 4,
+        },
+      ],
+      "id": 3,
+      "inputType": "number",
+      "prompt": "Enter your height in centimeters.",
+      "title": "Height",
+      "validation": {
+        "max": 250,
+        "min": 100,
+        "required": true,
+      },
+    },
+    {
+      "branch": [
+        {
+          "action": "end",
+          "condition": "bmi < 25",
+          "reason": "BMI Too Low",
+          "result": "Ineligible",
+        },
+        {
+          "action": "end",
+          "condition": "bmi >= 40",
+          "reason": "High BMI",
+          "result": "Requires Clinical Review",
+        },
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 5,
+        },
+      ],
+      "computation": {
+        "dependsOn": {
+          "height": 3,
+          "weight": 2,
+        },
+        "formula": "weight / ((height / 100) ** 2)",
+      },
+      "id": 4,
+      "inputType": "computed",
+      "prompt": "Calculating your Body Mass Index (BMI)...",
+      "title": "BMI Evaluation",
+    },
+    {
+      "branch": [
+        {
+          "action": "end",
+          "condition": "value === 'Yes'",
+          "reason": "Pregnancy Contraindication",
+          "result": "Ineligible",
+        },
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 6,
+        },
+      ],
+      "id": 5,
+      "inputType": "radio",
+      "options": [
+        "Yes",
+        "No",
+      ],
+      "prompt": "Are you currently pregnant?",
+      "title": "Pregnancy Status",
+    },
+    {
+      "allowEmpty": true,
+      "branch": [
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 7,
+        },
+      ],
+      "id": 6,
+      "inputType": "checkbox",
+      "options": [
+        "Hypertension",
+        "Dyslipidemia",
+        "Sleep Apnea",
+        "GERD",
+        "Thyroid Disorder",
+      ],
+      "prompt": "Which chronic conditions have you been diagnosed with? (Select all that apply)",
+      "title": "Comorbid Conditions",
+    },
+    {
+      "branch": [
+        {
+          "action": "next",
+          "condition": "value === 'Yes'",
+          "screen": 8,
+        },
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 9,
+        },
+      ],
+      "id": 7,
+      "inputType": "radio",
+      "options": [
+        "Yes",
+        "No",
+      ],
+      "prompt": "Have you ever been diagnosed with diabetes?",
+      "title": "Diabetes History",
+    },
+    {
+      "branch": [
+        {
+          "action": "end",
+          "condition": "value > 9.0",
+          "reason": "Uncontrolled Diabetes",
+          "result": "Ineligible",
+        },
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 9,
+        },
+      ],
+      "id": 8,
+      "inputType": "number",
+      "prompt": "Enter your latest HbA1c (%) result.",
+      "title": "HbA1c",
+      "validation": {
+        "max": 20,
+        "min": 3,
+        "required": true,
+      },
+    },
+    {
+      "allowEmpty": false,
+      "branch": [
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 10,
+        },
+      ],
+      "id": 9,
+      "inputType": "checkbox",
+      "minSelect": 1,
+      "options": [
+        "Normal (< 120/80)",
+        "Elevated (120–129 / <80)",
+        "Stage 1 Hypertension (130–139 / 80–89)",
+        "Stage 2 Hypertension (≥140 / ≥90)",
+        "Hypertensive Crisis (>180 / >120)",
+      ],
+      "prompt": "Check all that apply based on your most recent blood pressure reading.",
+      "title": "Blood Pressure",
+    },
+    {
+      "allowEmpty": true,
+      "branch": [
+        {
+          "action": "end",
+          "condition": "value.includes('GLP-1 receptor agonist')",
+          "reason": "Already On GLP-1 Therapy",
+          "result": "Requires Clinical Review",
+        },
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 11,
+        },
+      ],
+      "id": 10,
+      "inputType": "checkbox",
+      "options": [
+        "ACE inhibitors",
+        "Beta blockers",
+        "Statins",
+        "Thyroid medication",
+        "GLP-1 receptor agonist",
+      ],
+      "prompt": "Which medications are you currently prescribed?",
+      "title": "Current Medications",
+    },
+    {
+      "branch": [
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 12,
+        },
+      ],
+      "id": 11,
+      "inputType": "radio",
+      "options": [
+        "Yes",
+        "No",
+      ],
+      "prompt": "Do you currently smoke tobacco?",
+      "title": "Smoking Status",
+    },
+    {
+      "branch": [
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 13,
+        },
+      ],
+      "id": 12,
+      "inputType": "radio",
+      "options": [
+        "Never",
+        "Monthly",
+        "Weekly",
+        "Daily",
+      ],
+      "prompt": "How often do you consume alcohol?",
+      "title": "Alcohol Use Frequency",
+    },
+    {
+      "branch": [
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 14,
+        },
+      ],
+      "id": 13,
+      "inputType": "radio",
+      "options": [
+        "Sedentary",
+        "Light (1–2x/week)",
+        "Moderate (3–4x/week)",
+        "Vigorous (5+x/week)",
+      ],
+      "prompt": "How would you describe your typical activity level?",
+      "title": "Physical Activity Level",
+    },
+    {
+      "allowEmpty": true,
+      "branch": [
+        {
+          "action": "next",
+          "condition": "default",
+          "screen": 15,
+        },
+      ],
+      "id": 14,
+      "inputType": "checkbox",
+      "options": [
+        "High sugar intake",
+        "High processed foods",
+        "Frequent sugary beverages",
+        "High fiber diet",
+        "Balanced diet",
+      ],
+      "prompt": "Which best describes your diet? (Select all that apply)",
+      "title": "Dietary Habits",
+    },
+    {
+      "branch": [],
+      "id": 15,
+      "inputType": "evaluation",
+      "prompt": null,
+      "title": "Final Evaluation",
+    },
+  ],
+  "version": "1.0.0",
+}
+`;

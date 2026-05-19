@@ -1,0 +1,317 @@
+# Implementation Plan: GLP-1 Eligibility Screening Form
+
+## Overview
+
+Full-stack monorepo application (NestJS 11 + Next.js 15 + PostgreSQL 15) implementing a 15-screen GLP-1 medication eligibility questionnaire with server-side branching, a pure function evaluator, session persistence, and WCAG 2.1 AA accessibility. Tasks follow the implementation spec section order. Reference `KIRO_SPEC_PhoenixLabs_GLP1.md` for exact file contents.
+
+## Tasks
+
+- [ ] 1. Repository & Monorepo Bootstrap
+  - [x] 1.1 Create root package.json with npm workspaces configuration
+    - Define workspaces: `["apps/web", "apps/api"]`
+    - Add scripts: `dev`, `test`, `test:e2e` delegating to workspaces
+    - Use `concurrently` for parallel dev script
+    - _Requirements: 1.1, 1.2_
+  - [x] 1.2 Create root .gitignore
+    - Exclude: node_modules, .env, .env.local, dist, .next, coverage, playwright-report, test-results
+    - _Requirements: 1.3_
+  - [x] 1.3 Create directory structure scaffolding
+    - Create `apps/api/src/` and `apps/web/` directory trees
+    - Ensure folder structure matches spec Section 1.4
+    - _Requirements: 1.1_
+
+- [ ] 2. Docker + PostgreSQL Setup
+  - [x] 2.1 Create docker-compose.yml at repository root
+    - PostgreSQL 15 Alpine image with container name `glp1_postgres`
+    - Environment: POSTGRES_USER=glp1user, POSTGRES_PASSWORD=glp1pass, POSTGRES_DB=glp1db
+    - Port mapping 5432:5432
+    - Health check using `pg_isready`
+    - Named volume `postgres_data` for persistence
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [x] 2.2 Create apps/api/.env file
+    - DATABASE_URL pointing to local PostgreSQL
+    - PORT=4000
+    - _Requirements: 3.1_
+
+- [ ] 3. Backend NestJS 11 Setup
+  - [x] 3.1 Create apps/api/package.json with exact dependencies
+    - NestJS 11 core packages, Prisma client, class-validator, class-transformer
+    - Dev deps: vitest 4, unplugin-swc, @nestjs/testing, prisma CLI, typescript
+    - Scripts: build, start:dev, dev, test, test:watch, test:coverage
+    - _Requirements: 3.1, 16.1_
+  - [x] 3.2 Create apps/api/vitest.config.ts
+    - Use unplugin-swc for NestJS decorator support
+    - Configure coverage provider v8 with include paths for evaluator, session, form-schema
+    - _Requirements: 16.1_
+  - [x] 3.3 Create apps/api/src/main.ts
+    - Bootstrap NestJS app with global prefix "api"
+    - Apply ValidationPipe with whitelist and transform enabled
+    - Enable CORS for origin http://localhost:3000
+    - Listen on configurable PORT defaulting to 4000
+    - _Requirements: 3.1, 3.2, 3.3, 3.4_
+  - [x] 3.4 Create apps/api/src/app.module.ts
+    - Import SessionModule
+    - Provide PrismaService
+    - _Requirements: 3.1_
+  - [x] 3.5 Create apps/api/tsconfig.json and nest-cli.json
+    - Configure TypeScript for NestJS with decorators and resolveJsonModule
+    - _Requirements: 3.1_
+
+- [ ] 4. Prisma Schema & Migrations
+  - [x] 4.1 Create apps/api/prisma/schema.prisma
+    - Session model: id (UUID), createdAt, updatedAt, currentScreen (default 1), isComplete (default false), result (nullable), resultReason (nullable), answers relation
+    - Answer model: id (UUID), sessionId, screenId, value (Json), createdAt, session relation with onDelete Cascade
+    - Unique constraint on [sessionId, screenId], index on sessionId
+    - _Requirements: 4.1, 4.2, 4.3, 4.4_
+  - [x] 4.2 Create apps/api/src/prisma/prisma.service.ts
+    - Extend PrismaClient, implement OnModuleInit and OnModuleDestroy
+    - Connect on init, disconnect on destroy
+    - _Requirements: 4.1_
+  - [x] 4.3 Run initial Prisma migration
+    - Execute `npx prisma migrate dev --name init` and `npx prisma generate`
+    - _Requirements: 4.1_
+
+- [ ] 5. Checkpoint — Verify database setup
+  - Ensure Docker PostgreSQL starts, Prisma migration runs cleanly, and Prisma client generates. Ask the user if questions arise.
+
+- [ ] 6. Form Logic JSON Schema
+  - [x] 6.1 Create apps/api/src/form-schema/form-schema.json
+    - Define all 15 screens with id, title, prompt, inputType, and branch arrays
+    - Screen types: number (1,2,3,8), computed (4), radio (5,7,11,12,13), checkbox (6,9,10,14), evaluation (15)
+    - Include validation rules (min, max, required) for number inputs
+    - Include options arrays for radio and checkbox inputs
+    - Include branch conditions with action (next/end), screen targets, result, and reason
+    - Include computation metadata for Screen 4 (formula, dependsOn)
+    - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
+
+- [ ] 7. Eligibility Evaluator (Pure Function)
+  - [x] 7.1 Create apps/api/src/evaluator/evaluator.types.ts
+    - Define EligibilityResult type: "Eligible" | "Ineligible" | "Requires Clinical Review"
+    - Define EligibilityReason interface: { result, reason }
+    - Define FormAnswers interface with all 14 fields matching screen answers
+    - _Requirements: 8.1, 8.2_
+  - [x] 7.2 Create apps/api/src/evaluator/evaluator.ts
+    - Implement `checkImmediateIneligibility`: age < 18, BMI < 25, pregnant Yes, diabetic + HbA1c > 9.0, GLP-1 medication
+    - Implement `checkAutomaticClinicalReview`: age > 75, BMI >= 40, Stage 2 HTN + Diabetes, Hypertensive Crisis, 3+ comorbidities
+    - Implement `checkOptionalClinicalReview`: Stage 1 + Sedentary + High sugar, Daily alcohol + risk factors (BMI >= 30, comorbidity, smoking)
+    - Implement `evaluateEligibility` main function with strict priority ordering
+    - Export `computeBMI(weightKg, heightCm)` utility function
+    - Zero framework dependencies — no NestJS, Prisma, or React imports
+    - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 9.1, 9.2_
+
+- [ ] 8. Backend API Endpoints
+  - [x] 8.1 Create apps/api/src/session/dto/start-session.dto.ts and answer-session.dto.ts
+    - AnswerSessionDto: sessionId (string, not empty), screenId (number, min 1), value (unknown)
+    - Use class-validator decorators
+    - _Requirements: 5.1, 5.4_
+  - [x] 8.2 Create apps/api/src/session/session.service.ts
+    - `startSession()`: create session, return sessionId + currentScreen + first screen definition
+    - `getSession(id)`: find session with answers, return full state or throw 404
+    - `saveAnswer(sessionId, screenId, value)`: upsert answer, resolve branching, return next screen or final result
+    - `resolveNextScreen()`: switch/case implementing all branching logic per screen
+    - `buildFormAnswers()`: construct FormAnswers from answer map for evaluator
+    - Invoke evaluateEligibility when reaching Screen 15
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11_
+  - [x] 8.3 Create apps/api/src/session/session.controller.ts
+    - POST /session/start → startSession()
+    - GET /session/:id → getSession(id)
+    - POST /session/answer → saveAnswer(body)
+    - _Requirements: 5.1, 5.2, 5.4_
+  - [x] 8.4 Create apps/api/src/session/session.module.ts
+    - Register SessionController, SessionService, PrismaService
+    - _Requirements: 3.1_
+
+- [ ] 9. Checkpoint — Verify backend API
+  - Ensure `npm install` succeeds in apps/api, the app compiles, and API endpoints respond correctly with Docker PostgreSQL running. Ask the user if questions arise.
+
+- [ ] 10. Frontend Next.js 15 Setup
+  - [x] 10.1 Create apps/web/package.json with dependencies
+    - Next.js 15, React 19, Tailwind CSS, Zustand
+    - Dev deps: vitest, @vitejs/plugin-react, @vitest/coverage-v8, @playwright/test, @testing-library/react, @testing-library/jest-dom
+    - Scripts: dev, build, start, test, test:e2e
+    - _Requirements: 10.1, 10.3, 16.1, 17.1_
+  - [x] 10.2 Create apps/web/vitest.config.ts and vitest.setup.ts
+    - Configure jsdom environment, react plugin, globals, setup file
+    - Setup file imports @testing-library/jest-dom
+    - _Requirements: 16.1_
+  - [x] 10.3 Create apps/web/playwright.config.ts
+    - Test directory: ./e2e
+    - Base URL: http://localhost:3000
+    - Configure webServer entries for both API and web dev servers
+    - Chromium project only
+    - _Requirements: 17.1_
+  - [x] 10.4 Create apps/web/tsconfig.json and next.config.ts
+    - Enable resolveJsonModule for importing form-schema.json
+    - Configure path alias @/* for imports
+    - _Requirements: 10.1_
+  - [x] 10.5 Create apps/web/app/globals.css with Tailwind directives
+    - Include @tailwind base, components, utilities
+    - _Requirements: 10.3_
+  - [x] 10.6 Create apps/web/tailwind.config.ts
+    - Configure content paths for app and components directories
+    - _Requirements: 10.3_
+
+- [ ] 11. Frontend State Management
+  - [x] 11.1 Create apps/web/lib/api.ts
+    - `startSession()`: POST /api/session/start
+    - `getSession(sessionId)`: GET /api/session/:id
+    - `saveAnswer(sessionId, screenId, value)`: POST /api/session/answer
+    - Use NEXT_PUBLIC_API_URL env var with fallback to http://localhost:4000/api
+    - _Requirements: 5.1, 5.2, 5.4_
+  - [x] 11.2 Create apps/web/lib/sessionStore.ts
+    - Zustand store with persist middleware using localStorage key "glp1-session"
+    - State: sessionId, currentScreen, answers, isComplete, result, resultReason
+    - Actions: setSessionId, setCurrentScreen, saveLocalAnswer, setComplete, reset
+    - Partialize to persist only data fields (not action functions)
+    - _Requirements: 12.1, 12.2, 12.3_
+  - [x] 11.3 Create apps/web/lib/formSchema.ts
+    - Import and re-export form-schema.json with TypeScript types
+    - _Requirements: 10.4_
+
+- [ ] 12. Frontend Form UI
+  - [x] 12.1 Create apps/web/app/layout.tsx
+    - Root HTML layout with metadata, global CSS import, lang="en"
+    - _Requirements: 10.1_
+  - [x] 12.2 Create apps/web/app/page.tsx (Home/Landing page)
+    - "Start Screening" CTA link to /form with data-testid="start-screening-btn"
+    - Descriptive text about the screening
+    - _Requirements: 10.2_
+  - [x] 12.3 Create apps/web/app/form/page.tsx (Form orchestrator)
+    - Initialize or resume session on mount using Zustand store + API
+    - Render ProgressBar and FormScreen for current screen
+    - Handle answer submission: call saveAnswer API, update store, advance or navigate to result
+    - Handle loading and error states with aria-live and aria-busy
+    - _Requirements: 10.2, 10.4, 12.2, 15.6_
+  - [x] 12.4 Create apps/web/components/ProgressBar.tsx
+    - role="progressbar" with aria-valuenow, aria-valuemin, aria-valuemax
+    - Visual bar width based on current/total ratio
+    - data-testid="progress-bar"
+    - _Requirements: 13.1, 13.2, 13.3_
+  - [x] 12.5 Create apps/web/components/FormScreen.tsx
+    - Dispatch to correct input component based on screen.inputType
+    - Pass screen definition, previousAnswer, onNext callback, submitting state
+    - _Requirements: 10.4, 11.1, 11.2, 11.3, 11.4_
+  - [x] 12.6 Create apps/web/components/inputs/NumberInput.tsx
+    - Numeric input with label, min/max validation
+    - aria-invalid on error, role="alert" on error message
+    - data-testid="number-input-screen-{id}" and data-testid="next-btn"
+    - Keyboard support: Enter to submit
+    - _Requirements: 11.1, 15.1, 15.2, 15.4, 15.5, 15.8_
+  - [x] 12.7 Create apps/web/components/inputs/RadioInput.tsx
+    - Radio group within fieldset/legend, role="radiogroup"
+    - data-testid per option, validation for required selection
+    - _Requirements: 11.2, 15.1, 15.2, 15.3, 15.8_
+  - [x] 12.8 Create apps/web/components/inputs/CheckboxInput.tsx
+    - Checkbox group within fieldset/legend
+    - Support allowEmpty and minSelect validation
+    - data-testid per option
+    - _Requirements: 11.3, 15.1, 15.2, 15.3, 15.8_
+  - [x] 12.9 Create apps/web/components/inputs/ComputedScreen.tsx
+    - Compute BMI from stored weight and height answers
+    - Display result with aria-live="polite"
+    - Auto-advance after 2 seconds
+    - data-testid="bmi-result"
+    - _Requirements: 9.3, 11.4, 15.6_
+  - [x] 12.10 Create apps/web/app/form/result/page.tsx (Result page)
+    - Color-coded display: green (Eligible), red (Ineligible), amber (Requires Clinical Review)
+    - Show result headline, reason, and description
+    - "Start Over" button that resets store and navigates to home
+    - data-testid="result-screen", data-testid="result-{type}", data-testid="result-reason"
+    - _Requirements: 10.2, 14.1, 14.2, 14.3, 15.8_
+
+- [ ] 13. Checkpoint — Verify full-stack form flow
+  - Ensure the form flows from Screen 1 to Screen 15 end-to-end in the browser, early exits work, and session resume works after refresh. Ask the user if questions arise.
+
+- [ ] 14. Unit Tests
+  - [x] 14.1 Create apps/api/src/evaluator/evaluator.spec.ts
+    - Test computeBMI correctness
+    - Test all immediate ineligibility conditions (age < 18, BMI < 25, pregnant, HbA1c > 9.0 with diabetes)
+    - Test GLP-1 medication → Clinical Review
+    - Test all automatic clinical review conditions (age > 75, BMI >= 40, Stage 2 + Diabetes, Hypertensive Crisis, 3+ comorbidities)
+    - Test all optional clinical review conditions (Stage 1 + Sedentary + High sugar, Daily alcohol + risk factors)
+    - Test eligible happy path
+    - Test priority ordering (ineligible takes precedence over review)
+    - Achieve 100% branch coverage on evaluator.ts
+    - _Requirements: 16.2_
+  - [x] 14.2 Create apps/api/src/form-schema/form-schema.spec.ts
+    - Validate 15 screens present with sequential IDs
+    - Validate every screen has id, title, inputType
+    - Validate radio/checkbox screens have options arrays
+    - Validate computed screen has computation metadata
+    - Validate all branch actions are "next" or "end" with valid screen references
+    - Include snapshot test for schema shape
+    - _Requirements: 16.3_
+  - [x] 14.3 Create apps/api/src/session/session.controller.spec.ts
+    - Test startSession delegates to service
+    - Test getSession delegates with id parameter
+    - Test saveAnswer delegates with DTO fields
+    - Use mocked SessionService
+    - _Requirements: 16.4_
+  - [x] 14.4 Write property tests for eligibility evaluator using fast-check
+    - **Property 1: BMI computation is mathematically correct**
+    - **Property 2: Immediate ineligibility conditions always produce "Ineligible"**
+    - **Property 3: Automatic clinical review produces "Requires Clinical Review" when no ineligibility exists**
+    - **Property 4: Optional clinical review produces "Requires Clinical Review" when no higher-priority conditions exist**
+    - **Property 5: Eligible is the default when no conditions trigger**
+    - **Property 6: Priority order is strictly enforced**
+    - **Validates: Requirements 8.3, 8.4, 8.5, 8.6, 8.7, 9.2**
+
+- [ ] 15. Checkpoint — Verify unit tests pass
+  - Ensure `npm run test` passes in apps/api with 100% branch coverage on evaluator.ts. Ask the user if questions arise.
+
+- [ ] 16. E2E Tests (Playwright)
+  - [x] 16.1 Create apps/web/e2e/helpers.ts
+    - Helper functions: fillScreen1, fillScreen2, fillScreen3, waitForBMI, fillScreen5Pregnant, skipCheckbox, fillRadio, fillCheckbox
+    - All helpers use data-testid selectors exclusively
+    - _Requirements: 17.5_
+  - [x] 16.2 Create apps/web/e2e/happy-path.spec.ts
+    - Complete eligible flow through all 15 screens
+    - Verify result page shows "Eligible"
+    - _Requirements: 17.2_
+  - [x] 16.3 Create apps/web/e2e/mid-flow-refresh.spec.ts
+    - Navigate to Screen 7, refresh page
+    - Verify session resumes at correct screen with progress bar intact
+    - _Requirements: 17.3_
+  - [x] 16.4 Create apps/web/e2e/terminal-states.spec.ts
+    - Test underage (age 16) → Ineligible
+    - Test pregnant → Ineligible
+    - Test GLP-1 medication → Requires Clinical Review
+    - _Requirements: 17.4_
+  - [x] 16.5 Create apps/web/e2e/edge-cases.spec.ts
+    - Test Hypertensive Crisis + Normal BP both checked → Clinical Review
+    - _Requirements: 17.4_
+
+- [ ] 17. GitHub Actions CI
+  - [x] 17.1 Create .github/workflows/ci.yml
+    - Trigger on push and pull_request to main
+    - PostgreSQL 15 service container with health check
+    - Job 1 (unit-tests): install deps, generate Prisma, migrate, run API tests, run web tests
+    - Job 2 (e2e-tests): depends on unit-tests, install Playwright browsers, run Playwright
+    - Cache npm and Playwright browsers
+    - Upload playwright-report artifact on failure
+    - _Requirements: 18.1, 18.2, 18.3, 18.4_
+
+- [ ] 18. Documentation
+  - [x] 18.1 Create WRITEUP.md at repository root
+    - Document 3 trade-offs: Zustand vs Context, server-side branching, JSON schema as single source of truth
+    - Document what would be done differently with more time
+    - Document AI tools used during development
+    - Document spec ambiguities and resolutions (BMI screen 3/4, daily alcohol risk factors, multiple BP selections)
+    - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5_
+  - [x] 18.2 Create README.md at repository root
+    - Setup instructions (Docker, install, migrate, run)
+    - How to run tests (unit and E2E)
+    - Architecture overview and tech stack
+    - _Requirements: 19.1_
+
+- [ ] 19. Final Checkpoint — Full verification
+  - Run full test suite, verify Docker setup, confirm all E2E tests pass, and validate CI workflow syntax. Ensure all tests pass, ask the user if questions arise.
+
+## Notes
+
+- Tasks marked with `*` are optional and can be skipped for faster MVP
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation at key milestones
+- The implementation spec (`KIRO_SPEC_PhoenixLabs_GLP1.md`) contains exact file contents for every task
+- Property tests validate universal correctness properties of the eligibility evaluator
+- All Playwright tests use data-testid selectors exclusively
