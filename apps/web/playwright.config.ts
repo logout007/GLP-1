@@ -22,13 +22,13 @@ export default defineConfig({
       cwd: "../api",
       url: "http://localhost:4000/api",
       reuseExistingServer: !process.env.CI,
-      timeout: 30000,
+      timeout: 60000,
     },
     {
-      command: "npm run dev",
+      command: process.env.CI ? "npm run start" : "npm run dev",
       url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
-      timeout: 30000,
+      timeout: 60000,
     },
   ],
 });
