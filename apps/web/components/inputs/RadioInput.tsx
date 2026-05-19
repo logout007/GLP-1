@@ -35,7 +35,7 @@ export function RadioInput({ screen, previousAnswer, onNext, submitting }: any) 
                     ? "border-blue-500 bg-blue-50 shadow-sm"
                     : "border-gray-200 hover:border-blue-200 hover:bg-gray-50"
                 }`}
-                data-testid={`radio-option-${opt.toLowerCase().replace(/\s+/g, "-")}`}
+                data-testid={`radio-option-${opt.toLowerCase().replace(/[\s()/–≥<>]/g, "-")}`}
               >
                 <input
                   id={optId}

@@ -35,7 +35,7 @@ function checkAutomaticClinicalReview(answers: FormAnswers): EligibilityReason |
   if (hasStage2 && answers.hasDiabetes === "Yes") {
     return { result: "Requires Clinical Review", reason: "Stage 2 Hypertension with Diabetes" };
   }
-  if (answers.bloodPressure.includes("Hypertensive Crisis (>180 / >120)")) {
+  if (answers.bloodPressure.includes("Hypertensive Crisis (>180/ >120)")) {
     return { result: "Requires Clinical Review", reason: "Hypertensive Crisis" };
   }
   if (answers.comorbidConditions.length >= 3) {

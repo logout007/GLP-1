@@ -25,7 +25,7 @@ const bpOptionsArb = fc.subarray([
   "Elevated (120–129 / <80)",
   "Stage 1 Hypertension (130–139 / 80–89)",
   "Stage 2 Hypertension (≥140 / ≥90)",
-  "Hypertensive Crisis (>180 / >120)"
+  "Hypertensive Crisis (>180/ >120)"
 ], { minLength: 1, maxLength: 5 });
 
 const medicationsArb = fc.subarray([
@@ -218,7 +218,7 @@ describe("Feature: glp1-eligibility-form, Property 6: Priority order is strictly
           bmi: 42,
           pregnant: "Yes",
           comorbidConditions: ["Hypertension", "Dyslipidemia", "Sleep Apnea"],
-          bloodPressure: ["Hypertensive Crisis (>180 / >120)"],
+          bloodPressure: ["Hypertensive Crisis (>180/ >120)"],
         }),
         (answers) => {
           const result = evaluateEligibility(answers);

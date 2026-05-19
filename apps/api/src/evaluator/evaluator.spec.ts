@@ -113,7 +113,7 @@ describe("evaluateEligibility — Automatic Clinical Review", () => {
   it("returns Clinical Review for Hypertensive Crisis", () => {
     const result = evaluateEligibility({
       ...BASE,
-      bloodPressure: ["Hypertensive Crisis (>180 / >120)"],
+      bloodPressure: ["Hypertensive Crisis (>180/ >120)"],
     });
     expect(result.result).toBe("Requires Clinical Review");
     expect(result.reason).toBe("Hypertensive Crisis");
